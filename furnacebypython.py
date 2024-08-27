@@ -107,7 +107,7 @@ class FurnaceGUI:
         if self.update_temperature_flag:
             self.temperature += 0.25
             self.temperature_label.config(text=f"Temperature: {self.temperature:.2f}°C")
-            if self.temperature >= 50.0:
+            if self.temperature >= 300.0:
                 # Replace flame1 with flame2 when temperature reaches 50°C
                 self.canvas.itemconfig("flame", image=self.flame2_image)
             else:
