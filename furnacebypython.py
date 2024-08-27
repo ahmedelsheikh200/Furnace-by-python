@@ -1,75 +1,121 @@
-import time
-from PIL import Image
+import tkinter as tk
+from tkinter import messagebox
 
-# Define the valve class
 class Valve:
     def __init__(self, name):
         self.name = name
         self.is_open = False
+    
+    def toggle(self):
+        self.is_open = not self.is_open
 
-    def open(self):
-        self.is_open = True
-        print(f"{self.name} valve is open.")
+class FurnaceGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Furnace Simulation")
 
-    def close(self):
-        self.is_open = False
-        print(f"{self.name} valve is closed.")
+        # Set the canvas size based on your image sizes
+        self.canvas_width = 600
+        self.canvas_height = 400
+        self.canvas = tk.Canvas(root, width=self.canvas_width, height=self.canvas_height)
+        self.canvas.grid(row=0, column=0, columnspan=2)
 
-    def check_valve(self):
-        if not self.is_open:
-            raise Exception(f"Error: {self.name} valve is closed! No flow is allowed.")
+        # Load images
+        self.air_image = tk.PhotoImage(file="airstream.png")
+        self.fuel_image = tk.PhotoImage(file="fuel.png")
+        self.furnace_image = tk.PhotoImage(file="furnace.png")
+        self.closed_image = tk.PhotoImage(file="closed.png")
+        self.open_image = tk.PhotoImage(file="open.png")
+        self.flame1_image = tk.PhotoImage(file="flame1.png")
+        self.flame2_image = tk.PhotoImage(file="flame2.png")
+
+        # Calculate the center positions and spacing
+        center_x = self.canvas_width // 2
+        furnace_x = center_x
+        furnace_y = self.canvas_height // 2
+
+        spacing = 20  # Distance between each image
+        valve_to_stream_distance = 50  # Distance between valve and stream images
+
+        air_valve_x = furnace_x - 150 - valve_to_stream_distance
+        fuel_valve_x = furnace_x - 150 - valve_to_stream_distance
+        air_stream_x = furnace_x - 100 - spacing
+        fuel_stream_x = furnace_x - 100 - spacing
+
+        air_valve_y = furnace_y - 50 - spacing
+        fuel_valve_y = furnace_y + 50 + spacing
+
+        # Place the furnace image in the center
+        self.canvas.create_image(furnace_x, furnace_y, image=self.furnace_image, tags="furnace")
+
+        # Place the streams with valve images above them
+        self.canvas.create_image(air_valve_x, air_valve_y, image=self.closed_image, tags="air_valve")
+        self.canvas.create_image(air_stream_x, air_valve_y, image=self.air_image, tags="air_stream")
+        self.canvas.create_image(fuel_valve_x, fuel_valve_y, image=self.closed_image, tags="fuel_valve")
+        self.canvas.create_image(fuel_stream_x, fuel_valve_y, image=self.fuel_image, tags="fuel_stream")
+
+        # Place the initial flame image under the furnace
+        flame_y = furnace_y + 100
+        self.flame = self.canvas.create_image(furnace_x, flame_y, image=self.flame1_image, tags="flame")
+
+        # Create buttons to control valves
+        self.air_valve_button = tk.Button(root, text="Toggle Air Valve", command=self.toggle_air_valve)
+        self.fuel_valve_button = tk.Button(root, text="Toggle Fuel Valve", command=self.toggle_fuel_valve)
+
+        self.air_valve_button.grid(row=1, column=0)
+        self.fuel_valve_button.grid(row=1, column=1)
+
+        # Temperature Label
+        self.temperature_label = tk.Label(root, text="Temperature: 25°C", font=("Arial", 14))
+        self.temperature_label.grid(row=3, column=0, columnspan=2, pady=10)
+
+        # Initialize valves and temperature
+        self.air_valve = Valve("Air")
+        self.fuel_valve = Valve("Fuel")
+        self.temperature = 25.0
+        self.update_temperature_flag = False
+
+    def toggle_air_valve(self):
+        self.air_valve.toggle()
+        if self.air_valve.is_open:
+            self.canvas.itemconfig("air_valve", image=self.open_image)
         else:
-            print(f"{self.name} valve is operational.")
-# Define the furnace class
-class Furnace :
-    def __init__(self):
-            self.temperature = 25  # Initial temperature in degrees Celsius
-            self.air_valve = Valve("Air")
-            self.fuel_valve = Valve("Fuel")
-    def update_temperature(self, time_seconds):
-        self.temperature = 25 + 0.25 * time_seconds
-        print(f"Temperature after {time_seconds} seconds: {self.temperature:.2f}°C")
-        self.display_flame()
-    def display_flame(self):
-        if 25 <= self.temperature <= 100:
-            print("Displaying flame 1 (low flame).")
-            flame_image = Image.open("flame1.png")
-        elif self.temperature > 300:
-            print("Displaying flame 2 (high flame).")
-            flame_image = Image.open("flame2.png")
-        else:
-            print("Displaying moderate flame.")
-            flame_image = Image.open("flame1.png")  # Default 
-    def run(self, duration_seconds):
-        try:
-            self.air_valve.check_valve()
-            self.fuel_valve.check_valve()
-            
-            for t in range(0, duration_seconds + 1):
-                self.update_temperature(t)
-                time.sleep(1)
-        except Exception as e:
-            print(e)
+            self.canvas.itemconfig("air_valve", image=self.closed_image)
+        self.check_all_valves()
 
-    def show_fuel_valve_status(self):
+    def toggle_fuel_valve(self):
+        self.fuel_valve.toggle()
         if self.fuel_valve.is_open:
-            print("Fuel valve is open. Displaying open valve image.")
-            valve_image = Image.open("valve_open.png")
+            self.canvas.itemconfig("fuel_valve", image=self.open_image)
         else:
-            print("Fuel valve is closed.")
-            valve_image = Image.open("valve_closed.png")
-        valve_image.show()
-# Main execution
-if __name__ == "__main__":
-    furnace = Furnace()
+            self.canvas.itemconfig("fuel_valve", image=self.closed_image)
+        self.check_all_valves()
 
-    # Open the valves
-    furnace.air_valve.open()
-    furnace.fuel_valve.open()
+    def check_all_valves(self):
+        if self.air_valve.is_open and self.fuel_valve.is_open:
+            # Both valves are open, start temperature increase
+            self.update_temperature_flag = True
+            self.increase_temperature()
+        else:
+            # Any valve is closed, reset temperature and show error
+            self.update_temperature_flag = False
+            self.temperature = 25.0
+            self.temperature_label.config(text=f"Temperature: {self.temperature:.2f}°C")
+            messagebox.showerror("Error", f"{'Air' if not self.air_valve.is_open else 'Fuel'} valve is closed! Furnace shutting down.")
 
-    # Show the fuel valve status
-    furnace.show_fuel_valve_status()
+    def increase_temperature(self):
+        if self.update_temperature_flag:
+            self.temperature += 0.25
+            self.temperature_label.config(text=f"Temperature: {self.temperature:.2f}°C")
+            if self.temperature >= 50.0:
+                # Replace flame1 with flame2 when temperature reaches 50°C
+                self.canvas.itemconfig("flame", image=self.flame2_image)
+            else:
+                # Ensure flame1 is displayed if temperature is below 50°C
+                self.canvas.itemconfig("flame", image=self.flame1_image)
+            self.root.after(1000, self.increase_temperature)
 
-    # Run the furnace for a certain duration (in seconds)
-    run_time = 120  # Example: run for 120 seconds
-    furnace.run(run_time)
+# Main application
+root = tk.Tk()
+app = FurnaceGUI(root)
+root.mainloop()
