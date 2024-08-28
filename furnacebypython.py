@@ -15,10 +15,10 @@ class FurnaceGUI:
         self.root.title("Furnace Simulation")
 
         # Set the canvas size based on your image sizes
-        self.canvas_width = 600
-        self.canvas_height = 400
+        self.canvas_width = 1400
+        self.canvas_height = 600
         self.canvas = tk.Canvas(root, width=self.canvas_width, height=self.canvas_height)
-        self.canvas.grid(row=0, column=0, columnspan=2)
+        self.canvas.grid(row=0, column=0, columnspan=4)
 
         # Load images
         self.air_image = tk.PhotoImage(file="airstream.png")
@@ -30,17 +30,17 @@ class FurnaceGUI:
         self.flame2_image = tk.PhotoImage(file="flame2.png")
 
         # Calculate the center positions and spacing
-        center_x = self.canvas_width // 2
+        center_x = self.canvas_width// 2
         furnace_x = center_x
         furnace_y = self.canvas_height // 2
 
-        spacing = 20  # Distance between each image
+        spacing = 22 # Distance between each image
         valve_to_stream_distance = 50  # Distance between valve and stream images
 
-        air_valve_x = furnace_x - 150 - valve_to_stream_distance
-        fuel_valve_x = furnace_x - 150 - valve_to_stream_distance
-        air_stream_x = furnace_x - 100 - spacing
-        fuel_stream_x = furnace_x - 100 - spacing
+        air_valve_x = furnace_x - 300 - valve_to_stream_distance
+        fuel_valve_x = furnace_x - 300 - valve_to_stream_distance
+        air_stream_x = furnace_x - 170 - spacing
+        fuel_stream_x = furnace_x - 170 - spacing
 
         air_valve_y = furnace_y - 50 - spacing
         fuel_valve_y = furnace_y + 50 + spacing
@@ -55,7 +55,7 @@ class FurnaceGUI:
         self.canvas.create_image(fuel_stream_x, fuel_valve_y, image=self.fuel_image, tags="fuel_stream")
 
         # Place the initial flame image under the furnace
-        flame_y = furnace_y + 100
+        flame_y = furnace_y +200
         self.flame = self.canvas.create_image(furnace_x, flame_y, image=self.flame1_image, tags="flame")
 
         # Create buttons to control valves
